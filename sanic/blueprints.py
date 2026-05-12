@@ -106,6 +106,19 @@ class Blueprint:
             return handler
         return decorator
 
+    def static(self, uri, file_or_directory, name="static",
+               content_type=None, index=None, strict_slashes=None):
+        from .static import register_static
+        self._deferred_statics = getattr(self, "_deferred_statics", [])
+        self._deferred_statics.append({
+            "uri": uri,
+            "file_or_directory": file_or_directory,
+            "name": name,
+            "content_type": content_type,
+            "index": index,
+            "strict_slashes": strict_slashes,
+        })
+
     def register(self, app, url_prefix=None):
         prefix = url_prefix if url_prefix is not None else self.url_prefix
         app.blueprints[self.name] = self
@@ -161,6 +174,18 @@ class Blueprint:
         for exc_class, handler in self.error_handlers.items():
             if exc_class not in app.error_handlers:
                 app.error_handlers[exc_class] = handler
+
+        for static_info in getattr(self, "_deferred_statics", []):
+            from .static import register_static
+            static_uri = prefix + static_info["uri"]
+            static_name = f"{self.name}.{static_info['name']}"
+            register_static(
+                app, static_uri, static_info["file_or_directory"],
+                name=static_name,
+                content_type=static_info.get("content_type"),
+                index=static_info.get("index"),
+                strict_slashes=static_info.get("strict_slashes"),
+            )
 
 
 def _create_bp_handler(handler, blueprint):

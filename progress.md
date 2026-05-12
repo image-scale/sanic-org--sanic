@@ -38,3 +38,27 @@
 **Commit**: Add custom exception handling with decorator registration
 **Acceptance**: 8/8 criteria met
 **Verification**: tests FAIL on previous state (git apply failed), PASS on current state
+
+## Round 6
+**Task**: Task 6 — Class-based views (HTTPMethodView)
+**Files created**: sanic/method_views.py, tests/test_views.py
+**Files modified**: sanic/__init__.py
+**Commit**: Add class-based views with HTTP method dispatch
+**Acceptance**: 7/7 criteria met
+**Verification**: tests FAIL on previous state (git apply failed), PASS on current state
+
+## Round 7
+**Task**: Task 7 — Cookie handling
+**Files created**: sanic/cookie_utils.py, tests/test_cookies.py
+**Files modified**: sanic/request_type.py, sanic/response_types.py, sanic/test_utils.py, sanic/__init__.py
+**Commit**: Add cookie handling for request parsing and response setting
+**Acceptance**: 10/10 criteria met
+**Verification**: tests FAIL on previous state (git apply failed), PASS on current state
+
+## Round 8
+**Task**: Task 8 — Signal/event system
+**Files created**: sanic/signals.py, tests/test_signals.py
+**Files modified**: sanic/app.py, sanic/__init__.py
+**Commit**: Add signal and event system with lifecycle hooks and custom signals
+**Acceptance**: 9/9 criteria met
+**Verification**: tests FAIL on previous state (git apply failed), PASS on current state

@@ -16,6 +16,7 @@ from .errors import (
 from .http_constants import HttpMethod, ALL_HTTP_METHODS
 from .configuration import AppConfig
 from .signals import SignalDispatcher, LifecycleEvent
+from .static import register_static
 
 
 class Sanic:
@@ -207,6 +208,12 @@ class Sanic:
 
     async def dispatch_signal(self, event_name, **kwargs):
         await self.signal_router.dispatch(event_name, **kwargs)
+
+    def static(self, uri, file_or_directory, name="static",
+               content_type=None, index=None, strict_slashes=None):
+        register_static(self, uri, file_or_directory, name=name,
+                         content_type=content_type, index=index,
+                         strict_slashes=strict_slashes)
 
     async def handle_request(self, request):
         try:
