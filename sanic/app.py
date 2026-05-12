@@ -17,6 +17,7 @@ from .http_constants import HttpMethod, ALL_HTTP_METHODS
 from .configuration import AppConfig
 from .signals import SignalDispatcher, LifecycleEvent
 from .static import register_static
+from .websocket import WebSocketConnection
 
 
 class Sanic:
@@ -45,6 +46,7 @@ class Sanic:
         self.listeners = defaultdict(list)
         self.blueprints = {}
         self.signal_router = SignalDispatcher()
+        self._websocket_routes = {}
 
         Sanic._registry[name] = self
 
@@ -215,6 +217,26 @@ class Sanic:
                          content_type=content_type, index=index,
                          strict_slashes=strict_slashes)
 
+    def websocket(self, uri, host=None, strict_slashes=None, name=None,
+                  subprotocols=None, version=None, version_prefix="/v"):
+        def decorator(handler):
+            final_uri = uri
+            if version is not None:
+                final_uri = f"{version_prefix}{version}{uri}"
+            route_name = name or handler.__name__
+            self._websocket_routes[route_name] = {
+                "uri": final_uri,
+                "handler": handler,
+                "subprotocols": subprotocols,
+            }
+            self.router.add(
+                final_uri, handler, ["GET"], name=route_name, host=host,
+                strict_slashes=strict_slashes if strict_slashes is not None
+                else self.strict_slashes,
+            )
+            return handler
+        return decorator
+
     async def handle_request(self, request):
         try:
             for mw in self.request_middleware:
@@ -294,6 +316,8 @@ class Sanic:
                     return
         elif scope["type"] == "http":
             await self._handle_asgi_http(scope, receive, send)
+        elif scope["type"] == "websocket":
+            await self._handle_asgi_websocket(scope, receive, send)
 
     async def _handle_asgi_http(self, scope, receive, send):
         body_parts = []
@@ -344,3 +368,44 @@ class Sanic:
             "type": "http.response.body",
             "body": response.body if response else b"",
         })
+
+    async def _handle_asgi_websocket(self, scope, receive, send):
+        raw_path = scope.get("path", "/")
+        headers = {}
+        for hname, hval in scope.get("headers", []):
+            headers[hname.decode("latin-1").lower()] = hval.decode("latin-1")
+
+        try:
+            route, handler, params = self.router.resolve("GET", raw_path)
+        except (PathNotFound, InvalidMethod):
+            await send({"type": "websocket.close", "code": 4004})
+            return
+
+        request = self.request_class(
+            method="GET",
+            path=raw_path,
+            headers=headers,
+            body=b"",
+            query_string=scope.get("query_string", b"").decode("utf-8", errors="replace"),
+            app=self,
+        )
+        request.match_info = params
+        request.route = route
+
+        msg = await receive()
+        if msg["type"] != "websocket.connect":
+            return
+
+        ws = WebSocketConnection(send, receive)
+        await ws.accept()
+
+        try:
+            await handler(request, ws, **params)
+        except Exception:
+            pass
+        finally:
+            if not ws.closed:
+                try:
+                    await ws.close()
+                except Exception:
+                    pass

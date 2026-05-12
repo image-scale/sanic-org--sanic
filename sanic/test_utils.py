@@ -3,6 +3,13 @@ import json as json_lib
 from typing import Optional, Dict, Any
 
 
+class WebSocketTestClient:
+    def __init__(self, sent_messages, received_messages, closed_code=None):
+        self.sent = sent_messages
+        self.received = received_messages
+        self.closed_code = closed_code
+
+
 class TestResponse:
     def __init__(self, status, headers, body, cookies=None):
         self.status = status
@@ -92,6 +99,10 @@ class AppTestClient:
         return self._run(self._request("OPTIONS", path, headers=headers,
                                        **kwargs))
 
+    def websocket(self, path, client_coro=None, headers=None):
+        return self._run(self._ws_request(path, client_coro=client_coro,
+                                          headers=headers))
+
     async def _request(self, method, path, headers=None, json=None,
                        data=None, **kwargs):
         if "?" in path:
@@ -156,3 +167,91 @@ class AppTestClient:
 
         return TestResponse(response_status, response_headers, response_body,
                             cookies=response_cookies)
+
+    async def _ws_request(self, path, client_coro=None, headers=None):
+        if "?" in path:
+            path_part, qs = path.split("?", 1)
+        else:
+            path_part = path
+            qs = ""
+
+        req_headers = {}
+        if headers:
+            req_headers = {k.lower(): v for k, v in headers.items()}
+
+        scope = {
+            "type": "websocket",
+            "path": path_part,
+            "query_string": qs.encode("utf-8"),
+            "headers": [
+                (k.encode("latin-1"), v.encode("latin-1"))
+                for k, v in req_headers.items()
+            ],
+            "root_path": "",
+            "scheme": "ws",
+            "server": ("localhost", 80),
+            "subprotocols": [],
+        }
+
+        client_to_server = asyncio.Queue()
+        server_to_client = asyncio.Queue()
+        server_sent = []
+        close_code = None
+
+        await client_to_server.put({"type": "websocket.connect"})
+
+        async def receive():
+            return await client_to_server.get()
+
+        async def send(message):
+            nonlocal close_code
+            if message["type"] == "websocket.accept":
+                pass
+            elif message["type"] == "websocket.send":
+                server_sent.append(message.get("text") or message.get("bytes"))
+                await server_to_client.put(message)
+            elif message["type"] == "websocket.close":
+                close_code = message.get("code", 1000)
+                await server_to_client.put(message)
+
+        client_messages = []
+
+        async def run_client():
+            if client_coro is None:
+                return
+
+            class ClientWs:
+                async def send(self, data):
+                    if isinstance(data, bytes):
+                        await client_to_server.put(
+                            {"type": "websocket.receive", "bytes": data}
+                        )
+                    else:
+                        await client_to_server.put(
+                            {"type": "websocket.receive", "text": str(data)}
+                        )
+
+                async def recv(self):
+                    msg = await server_to_client.get()
+                    if msg["type"] == "websocket.close":
+                        return None
+                    return msg.get("text") or msg.get("bytes")
+
+                receive = recv
+
+                async def close(self):
+                    await client_to_server.put({"type": "websocket.disconnect"})
+
+            ws = ClientWs()
+            try:
+                await client_coro(ws)
+            finally:
+                await client_to_server.put({"type": "websocket.disconnect"})
+
+        server_task = asyncio.create_task(self.app(scope, receive, send))
+        client_task = asyncio.create_task(run_client())
+
+        await asyncio.gather(server_task, client_task, return_exceptions=True)
+
+        return WebSocketTestClient(server_sent, client_messages,
+                                   closed_code=close_code)

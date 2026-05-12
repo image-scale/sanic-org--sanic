@@ -23,11 +23,12 @@ from .errors import (
     ServiceNotAvailable,
 )
 from .http_constants import HttpMethod, ALL_HTTP_METHODS
-from .test_utils import AppTestClient, TestResponse
+from .test_utils import AppTestClient, TestResponse, WebSocketTestClient
 from .routing import AppRouter
 from .blueprints import Blueprint, BlueprintGroup, group as blueprint_group
 from .configuration import AppConfig
 from .method_views import MethodBasedView
+from .websocket import WebSocketConnection
 
 
 __all__ = [
