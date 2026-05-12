@@ -119,9 +119,17 @@ class AppRouter:
             raise PathNotFound(f"No route with name: {name}")
         uri = route.uri
         param_re = re.compile(r"<(\w+)(?::(\w+))?>")
+        used_params = set()
         def replacer(m):
             pname = m.group(1)
             if pname in kwargs:
+                used_params.add(pname)
                 return str(kwargs[pname])
             return m.group(0)
-        return param_re.sub(replacer, uri)
+        result = param_re.sub(replacer, uri)
+
+        extra = {k: v for k, v in kwargs.items() if k not in used_params}
+        if extra:
+            from urllib.parse import urlencode
+            result += "?" + urlencode(extra)
+        return result
