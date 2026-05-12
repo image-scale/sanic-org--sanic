@@ -70,8 +70,20 @@
 - [ ] Config can load values from environment variables with SANIC_ prefix
 - [ ] Config prefix is configurable
 - [ ] Environment variable values are auto-converted to int, float, or bool
-- [ ] Config can be updated from a dict
-- [ ] Config can be updated from an object (reads uppercase attributes)
-- [ ] App exposes config via app.config attribute
-- [ ] Config values are accessible via attribute access: app.config.MY_SETTING
-- [ ] Config values are accessible via dict access: app.config["MY_SETTING"]
+- [x] Config can be updated from a dict
+- [x] Config can be updated from an object (reads uppercase attributes)
+- [x] App exposes config via app.config attribute
+- [x] Config values are accessible via attribute access: app.config.MY_SETTING
+- [x] Config values are accessible via dict access: app.config["MY_SETTING"]
+
+## Task 5: Custom exception handling
+
+### Acceptance Criteria
+- [ ] Users can register exception handlers using @app.exception(ExceptionClass)
+- [ ] Exception handlers receive request and exception, return a response
+- [ ] Most specific exception handler is chosen (subclass before parent)
+- [ ] Built-in exceptions: PathNotFound (404), BadRequestError (400), AuthenticationError (401), PermissionDenied (403), InvalidMethod (405), InternalError (500)
+- [ ] Default error handler returns JSON with error message and status code
+- [ ] Custom exception handler for a base class catches subclasses too
+- [ ] FrameworkError supports context and extra data attributes
+- [ ] Exception handlers work with async functions

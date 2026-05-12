@@ -156,6 +156,13 @@ class Sanic:
             return register(func)
         return register
 
+    def exception(self, *exceptions):
+        def decorator(handler):
+            for exc_class in exceptions:
+                self.error_handlers[exc_class] = handler
+            return handler
+        return decorator
+
     async def handle_request(self, request):
         try:
             for mw in self.request_middleware:
@@ -187,8 +194,7 @@ class Sanic:
         except FrameworkError as exc:
             return await self._handle_error(request, exc)
         except Exception as exc:
-            wrapped = FrameworkError(str(exc), status_code=500)
-            return await self._handle_error(request, wrapped)
+            return await self._handle_error(request, exc)
 
     async def _handle_error(self, request, exc):
         exc_type = type(exc)
