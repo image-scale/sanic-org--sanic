@@ -15,6 +15,7 @@ from .errors import (
 )
 from .http_constants import HttpMethod, ALL_HTTP_METHODS
 from .configuration import AppConfig
+from .signals import SignalDispatcher, LifecycleEvent
 
 
 class Sanic:
@@ -42,7 +43,7 @@ class Sanic:
         self.error_handlers = {}
         self.listeners = defaultdict(list)
         self.blueprints = {}
-        self.signal_handlers = defaultdict(list)
+        self.signal_router = SignalDispatcher()
 
         Sanic._registry[name] = self
 
@@ -162,6 +163,50 @@ class Sanic:
                 self.error_handlers[exc_class] = handler
             return handler
         return decorator
+
+    def listener(self, event_or_handler=None, event_name=None, *, priority=0):
+        def register(handler, event):
+            self.listeners[event].append(handler)
+            self.signal_router.register(event, handler, priority=priority)
+            return handler
+
+        if callable(event_or_handler):
+            ev = event_name or LifecycleEvent.BEFORE_SERVER_START
+            return register(event_or_handler, ev)
+
+        if isinstance(event_or_handler, str):
+            event = event_or_handler
+        else:
+            event = event_name or LifecycleEvent.BEFORE_SERVER_START
+
+        def decorator(handler):
+            return register(handler, event)
+        return decorator
+
+    def before_server_start(self, func=None, *, priority=0):
+        return self.listener(func, event_name=LifecycleEvent.BEFORE_SERVER_START,
+                             priority=priority)
+
+    def after_server_start(self, func=None, *, priority=0):
+        return self.listener(func, event_name=LifecycleEvent.AFTER_SERVER_START,
+                             priority=priority)
+
+    def before_server_stop(self, func=None, *, priority=0):
+        return self.listener(func, event_name=LifecycleEvent.BEFORE_SERVER_STOP,
+                             priority=priority)
+
+    def after_server_stop(self, func=None, *, priority=0):
+        return self.listener(func, event_name=LifecycleEvent.AFTER_SERVER_STOP,
+                             priority=priority)
+
+    def signal(self, event_name):
+        def decorator(handler):
+            self.signal_router.register(event_name, handler)
+            return handler
+        return decorator
+
+    async def dispatch_signal(self, event_name, **kwargs):
+        await self.signal_router.dispatch(event_name, **kwargs)
 
     async def handle_request(self, request):
         try:
