@@ -30,3 +30,11 @@
 **Commit**: Add a configuration system with env var loading and type conversion
 **Acceptance**: 10/10 criteria met
 **Verification**: tests FAIL on previous state (git apply failed), PASS on current state
+
+## Round 5
+**Task**: Task 5 — Custom exception handling
+**Files created**: tests/test_exceptions.py
+**Files modified**: sanic/app.py
+**Commit**: Add custom exception handling with decorator registration
+**Acceptance**: 8/8 criteria met
+**Verification**: tests FAIL on previous state (git apply failed), PASS on current state
