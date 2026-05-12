@@ -33,6 +33,9 @@ class Sanic:
 
         self.request_middleware = []
         self.response_middleware = []
+        self._request_mw_entries = []
+        self._response_mw_entries = []
+        self._mw_sequence = 0
         self.error_handlers = {}
         self.listeners = defaultdict(list)
         self.blueprints = {}
@@ -107,6 +110,49 @@ class Sanic:
         return self.route(uri, methods=["OPTIONS"], host=host,
                           strict_slashes=strict_slashes, name=name,
                           version=version, version_prefix=version_prefix)
+
+    def middleware(self, middleware_or_request=None, attach_to="request",
+                   *, priority=0):
+        def register(func):
+            self._mw_sequence += 1
+            seq = self._mw_sequence
+            if attach_to == "request":
+                self._request_mw_entries.append((priority, seq, func))
+                self._request_mw_entries.sort(
+                    key=lambda e: (-e[0], e[1])
+                )
+                self.request_middleware = [e[2] for e in self._request_mw_entries]
+            else:
+                self._response_mw_entries.append((priority, seq, func))
+                self._response_mw_entries.sort(
+                    key=lambda e: (-e[0], -e[1])
+                )
+                self.response_middleware = [e[2] for e in self._response_mw_entries]
+            return func
+
+        if callable(middleware_or_request):
+            return register(middleware_or_request)
+
+        if isinstance(middleware_or_request, str):
+            attach_to = middleware_or_request
+
+        def decorator(func):
+            return register(func)
+        return decorator
+
+    def on_request(self, func=None, *, priority=0):
+        def register(f):
+            return self.middleware(f, attach_to="request", priority=priority)
+        if func is not None:
+            return register(func)
+        return register
+
+    def on_response(self, func=None, *, priority=0):
+        def register(f):
+            return self.middleware(f, attach_to="response", priority=priority)
+        if func is not None:
+            return register(func)
+        return register
 
     async def handle_request(self, request):
         try:
