@@ -6,3 +6,11 @@
 **Commit**: Add a core async web application framework with route registration, request/response handling, and a test client
 **Acceptance**: 28/28 criteria met
 **Verification**: tests FAIL on previous state (git apply failed — files depend on new code), PASS on current state
+
+## Round 2
+**Task**: Task 2 — Middleware support
+**Files created**: tests/test_middleware.py
+**Files modified**: sanic/app.py
+**Commit**: Add middleware support with priority ordering and request/response phases
+**Acceptance**: 13/13 criteria met
+**Verification**: tests FAIL on previous state (git apply failed), PASS on current state

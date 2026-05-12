@@ -212,6 +212,17 @@ class Sanic:
     def url_for(self, view_name, **kwargs):
         return self.router.url_for(view_name, **kwargs)
 
+    def blueprint(self, bp):
+        from .blueprints import BlueprintGroup
+        if isinstance(bp, (list, tuple)):
+            for b in bp:
+                self.blueprint(b)
+            return
+        if isinstance(bp, BlueprintGroup):
+            bp.register(self)
+            return
+        bp.register(self)
+
     async def __call__(self, scope, receive, send):
         if scope["type"] == "lifespan":
             while True:

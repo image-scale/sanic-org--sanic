@@ -35,16 +35,29 @@
 ## Task 2: Middleware support
 
 ### Acceptance Criteria
-- [ ] Users can register request middleware using @app.middleware("request")
-- [ ] Users can register response middleware using @app.middleware("response")
-- [ ] @app.on_request is a shortcut for request middleware
-- [ ] @app.on_response is a shortcut for response middleware
-- [ ] Request middleware receives the request object
-- [ ] Response middleware receives both request and response objects
-- [ ] Request middleware can short-circuit by returning a response (skips handler)
-- [ ] Response middleware can modify or replace the response
-- [ ] Multiple middleware execute in registration order for request middleware
-- [ ] Response middleware executes in reverse registration order
-- [ ] Priority parameter controls middleware ordering (higher priority runs first for request)
-- [ ] Middleware can be async functions
-- [ ] Request middleware returning None continues to next middleware/handler
+- [x] Users can register request middleware using @app.middleware("request")
+- [x] Users can register response middleware using @app.middleware("response")
+- [x] @app.on_request is a shortcut for request middleware
+- [x] @app.on_response is a shortcut for response middleware
+- [x] Request middleware receives the request object
+- [x] Response middleware receives both request and response objects
+- [x] Request middleware can short-circuit by returning a response (skips handler)
+- [x] Response middleware can modify or replace the response
+- [x] Multiple middleware execute in registration order for request middleware
+- [x] Response middleware executes in reverse registration order
+- [x] Priority parameter controls middleware ordering (higher priority runs first for request)
+- [x] Middleware can be async functions
+- [x] Request middleware returning None continues to next middleware/handler
+
+## Task 3: Blueprints for modular route organization
+
+### Acceptance Criteria
+- [ ] Users can create a Blueprint with a name and URL prefix
+- [ ] Blueprint routes are prefixed with the blueprint's URL prefix when registered
+- [ ] Blueprints support the same route decorators as the app (get, post, put, delete, etc.)
+- [ ] Blueprints are registered on the app via app.blueprint(bp)
+- [ ] Blueprint middleware only runs for that blueprint's routes
+- [ ] Multiple blueprints can be registered on the same app
+- [ ] Blueprint groups allow registering multiple blueprints with a shared URL prefix
+- [ ] Blueprints support their own error/exception handlers
+- [ ] Blueprint routes are accessible through the test client after registration

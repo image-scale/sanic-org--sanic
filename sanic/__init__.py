@@ -25,6 +25,7 @@ from .errors import (
 from .http_constants import HttpMethod, ALL_HTTP_METHODS
 from .test_utils import AppTestClient, TestResponse
 from .routing import AppRouter
+from .blueprints import Blueprint, BlueprintGroup, group as blueprint_group
 
 
 __all__ = [
