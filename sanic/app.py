@@ -276,6 +276,11 @@ class Sanic:
                 resp_headers.append(
                     (k.encode("latin-1"), str(v).encode("latin-1"))
                 )
+            if hasattr(response, "cookie_jar"):
+                for cookie_val in response.cookie_jar.header_values():
+                    resp_headers.append(
+                        (b"set-cookie", cookie_val.encode("latin-1"))
+                    )
 
         status = response.status if response else 500
         await send({

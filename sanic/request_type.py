@@ -1,13 +1,15 @@
 import json as json_lib
 from urllib.parse import parse_qs
 
+from .cookie_utils import parse_request_cookies
+
 
 class RequestData:
     __slots__ = (
         "_app", "_method", "_path", "_headers", "_body", "_version",
         "_query_string", "_parsed_json", "_parsed_args", "_parsed_form",
         "_match_info", "_route", "_raw_url", "_content_type",
-        "_transport_info",
+        "_transport_info", "_parsed_cookies",
     )
 
     def __init__(self, method, path, headers=None, body=b"", version="1.1",
@@ -27,6 +29,7 @@ class RequestData:
         self._raw_url = path
         self._content_type = None
         self._transport_info = None
+        self._parsed_cookies = None
 
     @property
     def method(self):
@@ -106,6 +109,13 @@ class RequestData:
     @property
     def ip(self):
         return ""
+
+    @property
+    def cookies(self):
+        if self._parsed_cookies is None:
+            raw = self._headers.get("cookie", "")
+            self._parsed_cookies = parse_request_cookies(raw)
+        return self._parsed_cookies
 
     def get_args(self, key, default=None):
         vals = self.args.get(key)

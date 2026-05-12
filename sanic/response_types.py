@@ -1,6 +1,8 @@
 import json as json_lib
 from typing import Any, Optional, Dict
 
+from .cookie_utils import ResponseCookieJar
+
 
 class ServerResponse:
     def __init__(self, body=None, status=200, headers=None,
@@ -20,7 +22,7 @@ class ServerResponse:
                 self._headers[k.lower()] = v
         if content_type:
             self._headers["content-type"] = content_type
-        self._cookies = {}
+        self._cookie_jar = ResponseCookieJar()
 
     @property
     def body(self):
@@ -55,6 +57,16 @@ class ServerResponse:
             return json_lib.loads(self._body)
         except Exception:
             return None
+
+    @property
+    def cookie_jar(self):
+        return self._cookie_jar
+
+    def add_cookie(self, key, value, **kwargs):
+        return self._cookie_jar.add(key, value, **kwargs)
+
+    def delete_cookie(self, key, **kwargs):
+        return self._cookie_jar.delete(key, **kwargs)
 
 
 class JsonPayload(ServerResponse):

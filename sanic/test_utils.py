@@ -4,10 +4,11 @@ from typing import Optional, Dict, Any
 
 
 class TestResponse:
-    def __init__(self, status, headers, body):
+    def __init__(self, status, headers, body, cookies=None):
         self.status = status
         self._headers = headers
         self._body = body
+        self._raw_cookies = cookies or []
 
     @property
     def headers(self):
@@ -31,6 +32,22 @@ class TestResponse:
     @property
     def content_type(self):
         return self._headers.get("content-type", "")
+
+    @property
+    def cookies(self):
+        result = {}
+        for cookie_str in self._raw_cookies:
+            parts = cookie_str.split(";")
+            if parts:
+                kv = parts[0].strip()
+                if "=" in kv:
+                    key, _, val = kv.partition("=")
+                    result[key.strip()] = val.strip()
+        return result
+
+    @property
+    def raw_cookies(self):
+        return self._raw_cookies
 
 
 class AppTestClient:
@@ -114,6 +131,7 @@ class AppTestClient:
         response_started = False
         response_status = 500
         response_headers = {}
+        response_cookies = []
         response_body = b""
 
         async def receive():
@@ -127,10 +145,14 @@ class AppTestClient:
                 for hname, hval in message.get("headers", []):
                     key = hname.decode("latin-1").lower()
                     val = hval.decode("latin-1")
-                    response_headers[key] = val
+                    if key == "set-cookie":
+                        response_cookies.append(val)
+                    else:
+                        response_headers[key] = val
             elif message["type"] == "http.response.body":
                 response_body = message.get("body", b"")
 
         await self.app(scope, receive, send)
 
-        return TestResponse(response_status, response_headers, response_body)
+        return TestResponse(response_status, response_headers, response_body,
+                            cookies=response_cookies)
