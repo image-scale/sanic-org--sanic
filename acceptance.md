@@ -52,12 +52,26 @@
 ## Task 3: Blueprints for modular route organization
 
 ### Acceptance Criteria
-- [ ] Users can create a Blueprint with a name and URL prefix
-- [ ] Blueprint routes are prefixed with the blueprint's URL prefix when registered
-- [ ] Blueprints support the same route decorators as the app (get, post, put, delete, etc.)
-- [ ] Blueprints are registered on the app via app.blueprint(bp)
-- [ ] Blueprint middleware only runs for that blueprint's routes
-- [ ] Multiple blueprints can be registered on the same app
-- [ ] Blueprint groups allow registering multiple blueprints with a shared URL prefix
-- [ ] Blueprints support their own error/exception handlers
-- [ ] Blueprint routes are accessible through the test client after registration
+- [x] Users can create a Blueprint with a name and URL prefix
+- [x] Blueprint routes are prefixed with the blueprint's URL prefix when registered
+- [x] Blueprints support the same route decorators as the app (get, post, put, delete, etc.)
+- [x] Blueprints are registered on the app via app.blueprint(bp)
+- [x] Blueprint middleware only runs for that blueprint's routes
+- [x] Multiple blueprints can be registered on the same app
+- [x] Blueprint groups allow registering multiple blueprints with a shared URL prefix
+- [x] Blueprints support their own error/exception handlers
+- [x] Blueprint routes are accessible through the test client after registration
+
+## Task 4: Configuration system
+
+### Acceptance Criteria
+- [ ] Config object behaves like a dict (get, set, iterate)
+- [ ] Config provides sensible defaults (REQUEST_MAX_SIZE, REQUEST_TIMEOUT, etc.)
+- [ ] Config can load values from environment variables with SANIC_ prefix
+- [ ] Config prefix is configurable
+- [ ] Environment variable values are auto-converted to int, float, or bool
+- [ ] Config can be updated from a dict
+- [ ] Config can be updated from an object (reads uppercase attributes)
+- [ ] App exposes config via app.config attribute
+- [ ] Config values are accessible via attribute access: app.config.MY_SETTING
+- [ ] Config values are accessible via dict access: app.config["MY_SETTING"]

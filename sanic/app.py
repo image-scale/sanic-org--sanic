@@ -14,6 +14,7 @@ from .errors import (
     FrameworkError, PathNotFound, InvalidMethod, BadRequestError,
 )
 from .http_constants import HttpMethod, ALL_HTTP_METHODS
+from .configuration import AppConfig
 
 
 class Sanic:
@@ -22,7 +23,7 @@ class Sanic:
 
     def __init__(self, name, router=None, env_prefix=None,
                  request_class=None, strict_slashes=False,
-                 dumps=None, loads=None):
+                 dumps=None, loads=None, config=None):
         self.name = name
         self.router = router or AppRouter()
         self.strict_slashes = strict_slashes
@@ -30,6 +31,8 @@ class Sanic:
         self._dumps = dumps or json_lib.dumps
         self._loads = loads or json_lib.loads
         self.env_prefix = env_prefix or "SANIC_"
+
+        self.config = config or AppConfig(env_prefix=self.env_prefix)
 
         self.request_middleware = []
         self.response_middleware = []
@@ -40,7 +43,6 @@ class Sanic:
         self.listeners = defaultdict(list)
         self.blueprints = {}
         self.signal_handlers = defaultdict(list)
-        self._config = {}
 
         Sanic._registry[name] = self
 
